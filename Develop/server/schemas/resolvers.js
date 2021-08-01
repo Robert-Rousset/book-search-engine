@@ -18,11 +18,27 @@ const resolvers = {
     },
   },
   Mutation: {
-    createUser: async (parent, { body }) => {
-      return User.create(body);
+    createUser: async (parent, { username, email, password }) => {
+      const user = await User.create({ username, email, password });
+      const token = signToken(user);
+      return { token, user };
     },
-    login: async (parent, { body }) => {
-      return User.findOne({ email: body.email }, { password: body.password });
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        throw new AuthenticationError("No user found with this email address");
+      }
+
+      const correctPw = await user.isCorrectPassword(password);
+
+      if (!correctPw) {
+        throw new AuthenticationError("Incorrect credentials");
+      }
+
+      const token = signToken(user);
+
+      return { token, user };
     },
     saveBook: async (parent, { body }) => {
       return User.findOneAndUpdate(
