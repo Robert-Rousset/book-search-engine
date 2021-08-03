@@ -40,12 +40,25 @@ const resolvers = {
 
       return { token, user };
     },
-    saveBook: async (parent, { body }) => {
-      return User.findOneAndUpdate(
-        { _id: user._id },
-        { $addToSet: { savedBooks: body } },
-        { new: true, runValidators: true }
-      );
+    saveBook: async (parent, { bookToSave }, context) => {
+      if (context.user) {
+        const savedBook = User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: bookToSave } },
+          { new: true, runValidators: true }
+        );
+        return savedBook;
+      }
+    },
+    deleteBook: async (parent, { bookId }, context) => {
+      if (user.context) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId: bookId } } },
+          { new: true }
+        );
+        return updatedUser;
+      }
     },
   },
 };
